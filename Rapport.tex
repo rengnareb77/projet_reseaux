@@ -1,0 +1,66 @@
+\documentclass[a4paper,12pt]{report}
+
+\usepackage{authblk}
+\usepackage{hyperref}
+%French-specific commands
+%--------------------------------------
+\usepackage[french]{babel}
+\usepackage[autolanguage]{numprint} % for the \nombre command
+\usepackage{titlesec}
+\hypersetup{
+    colorlinks,
+    citecolor=black,
+    filecolor=black,
+    linkcolor=black,
+    urlcolor=black
+}
+
+
+\titleformat{\chapter}[display]
+  {\normalfont\huge\bfseries} % Style de titre
+  {} % Préfixe vide
+  {0pt} % Espacement entre le titre et le contenu
+  {\huge} % Style du titre
+
+\renewcommand{\chaptername}{}
+
+
+\title{Rapport Projet réseaux}
+\author{
+    Lucas BÉRANGER \and
+    Gillian LE PÉVÉDIC \and
+    François BESNARD \and
+    Alexandre FLOURY \and
+}
+\date{30/10/2024}
+
+\begin{document}
+
+    \maketitle  
+    \newpage
+
+    \tableofcontents
+    \newpage
+
+    \chapter{Introduction}
+        \section{Présentation de l'équipe}
+        \section{Répartition des tâches}
+    \chapter{Conception}
+        \section{Architecture}
+
+
+    \chapter{Conclusion}
+        \section{Difficultés rencontrées}
+        \section{Pistes d'amélioration}
+
+    \chapter*{Annexes}
+        \section{Diagramme de Flux}
+        \section{Schéma réseau logique}
+        \section{Schéma réseau physique}
+        \section{Plan d'adressage}
+        
+
+
+
+
+\end{document} 
