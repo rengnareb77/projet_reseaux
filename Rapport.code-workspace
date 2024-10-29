@@ -8,7 +8,7 @@
     "latex-workshop.latex.recipes": [
       {
         "name": "lualatex",
-        "tools": ["lualatex"]
+        "tools": ["lualatex", "cp"]
       }
     ],
     "latex-workshop.latex.tools": [
@@ -23,6 +23,11 @@
           "-output-directory=out",
           "%DOCFILE%"
         ]
+      },
+      {
+        "name": "cp",
+        "command": "cp",
+        "args": ["out/%DOCFILE%.pdf", "%DOCFILE%.pdf"]
       }
     ]
   }
