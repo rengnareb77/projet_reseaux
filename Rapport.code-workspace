@@ -1,0 +1,29 @@
+{
+  "folders": [
+    {
+      "path": "."
+    }
+  ],
+  "settings": {
+    "latex-workshop.latex.recipes": [
+      {
+        "name": "lualatex",
+        "tools": ["lualatex"]
+      }
+    ],
+    "latex-workshop.latex.tools": [
+      // Compilation tools and commands
+      {
+        "name": "lualatex",
+        "command": "lualatex",
+        "args": [
+          "-synctex=1",
+          "-interaction=nonstopmode",
+          "-file-line-error",
+          "-output-directory=out",
+          "%DOCFILE%"
+        ]
+      }
+    ]
+  }
+}
