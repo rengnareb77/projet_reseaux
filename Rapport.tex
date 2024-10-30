@@ -2,6 +2,7 @@
 
 \usepackage{authblk}
 \usepackage{hyperref}
+\usepackage{graphicx}
 %French-specific commands
 %--------------------------------------
 \usepackage[french]{babel}
@@ -51,9 +52,46 @@
         \section{Vlan}
         \section{DHCP}
         \section{Firewall}
-        \section{Switch}
-        Nous avons configuré des switchs Cisco 2960 Series pour assurer la redondance entre deux bâtiments sur cinq VLANs : 10, 20, 50, 60, et 100. Chaque switch a été configuré avec des ports en mode access et trunk pour permettre une communication efficace et sécurisée entre les différents segments du réseau. Les configurations incluent la définition des VLANs, l'attribution des ports aux VLANs, et la configuration des trunks pour permettre le passage des VLANs nécessaires.
-        Il y a un total de 4 switchs, 2 dans chaque bâtiment, qui sont connectés entre eux via 2 cable pour assurer la redondance du réseau. Les switchs sont configurés pour utiliser le protocole STP (Spanning Tree Protocol) afin de gérer les boucles de commutation et d'assurer la redondance du réseau.
+        \section{Configuration des Switches et Réseaux VLAN}
+
+\subsection{VLAN (Virtual Local Area Network)}
+Les VLANs (Virtual Local Area Networks) permettent de segmenter le réseau en sous-réseaux logiques distincts au sein d'une même infrastructure physique. En assignant des ports de switch à différents VLANs, il est possible de créer des réseaux indépendants, ce qui améliore la sécurité et limite la diffusion de paquets broadcast aux appareils d'un même VLAN. Par exemple, les départements \texttt{Production}, \texttt{Commercial}, et \texttt{Administration} peuvent être assignés respectivement aux VLANs 10, 20, et 30, permettant ainsi une séparation logique de leurs flux réseau.
+
+La configuration de VLANs se fait en assignant une \texttt{VLAN ID} spécifique aux ports du switch souhaités. Un switch peut gérer plusieurs VLANs, chacun étant isolé des autres, sauf si une communication inter-VLAN est mise en place via un routeur ou un switch de niveau 3.
+
+\subsection{Trunk}
+Le mode trunk est utilisé pour permettre à plusieurs VLANs de traverser un lien unique entre deux switches. Les liens trunk encapsulent les paquets des différents VLANs avec un identifiant (généralement via l'encapsulation IEEE 802.1Q), permettant ainsi de transporter les données de plusieurs VLANs sur un même câble.
+
+Dans notre infrastructure, les ports configurés en mode trunk assurent la liaison entre les switches des deux bâtiments, transportant les VLANs 10, 20, 50, 60 et 100. Cette configuration permet aux différents VLANs de rester interconnectés d'un bâtiment à l'autre tout en restant isolés les uns des autres au niveau logique. 
+
+Pour configurer un port en mode trunk, nous utilisons la commande suivante sur un switch Cisco :
+
+\begin{verbatim}
+interface f0/8
+ switchport mode trunk
+ switchport trunk allowed vlan 10,20,50,60,100
+ no shutdown
+\end{verbatim}
+
+\subsection{Redondance entre bâtiments}
+Afin d'assurer la continuité de service en cas de panne de lien entre les bâtiments, nous avons mis en place une redondance en utilisant des liens supplémentaires entre les switches principaux de chaque bâtiment. En cas de défaillance du lien principal, le trafic peut emprunter un lien secondaire pour maintenir la communication entre les VLANs des deux bâtiments. Cette redondance améliore la résilience de notre infrastructure et minimise les interruptions réseau en cas de défaillance matérielle ou de câble.
+
+\subsection{Spanning Tree Protocol (STP)}
+Le Spanning Tree Protocol (STP) est un protocole de niveau 2 conçu pour éviter les boucles de réseau dans les topologies redondantes. Lorsque plusieurs chemins sont disponibles entre les switches, STP désactive temporairement certains de ces chemins, formant un arbre sans boucle entre les switches connectés. 
+
+Dans notre réseau, STP détecte automatiquement les boucles potentielles entre les liens des bâtiments et désactive les chemins redondants au besoin, tout en gardant une connexion de secours disponible. Cela permet de prévenir la saturation du réseau et les tempêtes de broadcast.
+
+La configuration STP est souvent automatique sur les switches modernes, mais elle peut être optimisée en configurant les priorités des switches pour décider lequel sera le root bridge. Voici un exemple de commande pour configurer la priorité d'un switch :
+
+\begin{verbatim}
+spanning-tree vlan 10 priority 4096
+\end{verbatim}
+
+En abaissant la priorité d'un switch pour un VLAN donné, on peut le forcer à devenir le root bridge pour ce VLAN, ce qui optimise le chemin entre les switches.
+
+\subsection{Résumé}
+En résumé, l'utilisation des VLANs permet une segmentation efficace du réseau, tandis que le mode trunk facilite le transport des VLANs sur les liens entre switches. La redondance entre bâtiments améliore la résilience, et le protocole STP permet de gérer les boucles, garantissant ainsi une infrastructure réseau stable et performante.
+
     \chapter{Conclusion}
         \section{Difficultés rencontrées}
         \section{Pistes d'amélioration}
