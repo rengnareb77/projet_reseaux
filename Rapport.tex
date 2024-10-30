@@ -49,7 +49,32 @@
 
 
     \chapter{Architecture du réseau}
-        \section{Vlan}
+        \section{Le Routeur}
+        Au sein du projet, le routeur qui permet de faire transiter les paquets entre les différents VLANs est une machine virtuelle sous Ubuntu. Cette machine est équipée de deux interfaces réseaux, une pour chaque bâtiment. Pour que les paquets transitent correctement entre les différents VLANs, il a ainsi fallu configurer les interfaces réseaux de la machine virtuelle pour qu'elle puisse gérer les différents VLANs.
+            \subsection{Configuration}
+            Pour configurer les interfaces réseaux de la machine virtuelle, il a fallu utiliser les commandes ip link. Voici un exemple de configuration pour la VM qui nous sert de routeur :
+
+            \begin{verbatim}
+    
+    sudo ip link set enp0s9 up
+
+    sudo ip link add link enp0s9 name enp0s9.10 type vlan id 10 
+    sudo ip addr add 192,168,10,254 dev enp0s9.10 
+    sudo ip link set enp0s9.10 up
+            \end{verbatim}
+            Il faut démarrer l'interface que l'on souhaite utiliser, puis créer une interface virtuelle pour chaque VLAN que l'on souhaite gérer. Il faut répéter cette configuration pour chaque VLAN que l'on souhaite gérer sur la machine virtuelle en veillant bien à modifier l'interface quand elle doit être modifier. 
+            \subsection{Relai DHCP}
+
+            Pour que les machines des différents VLANs puissent obtenir une adresse IP, il a fallu configurer la machine virtuelle pour qu'elle fasse office de relai DHCP. Pour cela, il a fallu installer le service isc-dhcp-relay et configurer le fichier /etc/default/isc-dhcp-relay pour qu'il pointe vers le serveur DHCP.
+
+            \begin{verbatim}
+    # What servers should the DHCP relay forward requests to?
+    SERVERS="192.168.50.250"
+    
+    # On what interfaces should the DHCP relay (dhrelay) serve DHCP requests?
+    INTERFACES="enp0s9.10"
+            \end{verbatim}
+            Le relai DHCP pointe ainsi vers le serveur DHCP qui est sur le VLAN 50 et transmettra les requêtes DHCP des différents VLANs vers le serveur DHCP.
         \section{DHCP}
             Dans les consignes, nous devions mettre en place un service DHCP qui permettait de fournir une adresse IP à toutes les machines du réseau. 
             
@@ -76,6 +101,22 @@ subnet 192.168.10.0 netmask 255.255.255.0 {
 
 
         \section{Firewall}
+            \subsection{Configuration}
+            Nous avons choisi de mettre en place un firewall sur notre réseau pour sécuriser les communications entre les différents VLANs. Pour cela, nous avons utilisé le service iptables présent sur les distributions Ubuntu.
+            Le firewall est configuré sur la VM qui nous sert de routeur et qui permet de faire transiter les paquets entre les différents VLANs. Nous sommes partis d'une base qui refuse tout le trafic et nous avons autorisé uniquement les communications que nous souhaitions.
+
+            \subsection{Règles}
+            Pour cela nous avons mis en place un certains nombres de règles. L'un des objectifs était d'empêcher les communications entre les différents VLANs. Pour cela, nous avons mis en place les règles suivantes :
+            \begin{verbatim}
+iptables -A FORWARD -s 192.168.10.0/24 -d 192.168.20.0/24 -j DROP
+iptables -A FORWARD -s 192.168.10.0/24 -d 192.168.60.0/24 -j DROP
+iptables -A FORWARD -s 192.168.20.0/24 -d 192.168.10.0/24 -j DROP
+iptables -A FORWARD -s 192.168.20.0/24 -d 192.168.60.0/24 -j DROP
+iptables -A FORWARD -s 192.168.60.0/24 -d 192.168.10.0/24 -j DROP
+iptables -A FORWARD -s 192.168.60.0/24 -d 192.168.20.0/24 -j DROP
+            \end{verbatim}
+            Nous avons également mis en place des règles pour autoriser les communications entre les différents VLANs à communiquer avec le vlan contenant tous les services communs. Tous les VLANs ont également la possibilité de communiquer avec la DMZ via des requêtes HTTP et HTTPS et sont également autorisés à communiquer avec internet via le NAT. Internet dans notre projet étant représenté par une VM a l'extérieur du réseau. 
+
         \section{Configuration des Switches et Réseaux VLAN}
 
             \subsection{VLAN (Virtual Local Area Network)}
@@ -122,6 +163,11 @@ spanning-tree vlan 10 priority 4096
                 Le partage de fichier permet aux utilisateurs de stocker et d'accéder à des fichiers sur un serveur centralisé. Dans notre cas pour simplifier sa mise en place, nous avons simplement installé un serveur ftp sur le serveur de production via le service vsftpd. Ce service permet de partager des fichiers entre les différents utilisateurs du réseau.
             \subsection{Système de sauvegarde}
                 La sauvegarde des données est un élément essentiel de toute infrastructure informatique. En cas de panne matérielle, de corruption de données ou de sinistre, les sauvegardes permettent de restaurer les données et de minimiser les pertes. Pour notre infrastructure, nous avons pour des raison de simplicité mis en place un serveur ftp via le service vsftpd sur le serveur de production.
+        \section{Serveur Web et DMZ}
+            \subsection{Serveur Web}
+                Le serveur web contient les pages web de l'entreprise et est accessible depuis Internet. Il permet de présenter l'entreprise, ses services et ses produits aux clients potentiels. Le serveur web est hébergé sur une machine virtuelle dans la DMZ et est accessible depuis l'extérieur via le protocole HTTP et HTTPS.
+            \subsection{DMZ}
+                La DMZ (Demilitarized Zone) est une zone tampon située entre le réseau interne et le réseau externe (Internet). Elle permet d'isoler les services exposés au public, tels que les serveurs web, les serveurs de messagerie ou les serveurs DNS, des réseaux internes. Sur ce réseau, la DMZ est représentée par une machine virtuelle qui héberge un serveur web accessible depuis Internet. Cette machine est connectée à un VLAN spécifique qui la sépare du reste du réseau interne et les règles de filtrage du firewall permettent de contrôler les communications entre la DMZ et les autres VLANs.
     \chapter{Conclusion}
         \section{Difficultés rencontrées}
 
@@ -131,6 +177,7 @@ spanning-tree vlan 10 priority 4096
                 \item \textbf{Préconfiguration des switchs}: Certains switchs avaient déjà une configuration préexistante. Ces configurations entravaient la mise en place de notre architecture réseau et ont nécessité une renitialisation complète des switchs.
                 \item \textbf{Cables défectueux}: Certains câbles ethernet étaient défectueux, ce qui a causé des problèmes de connectivité entre les équipements. Ces câbles ont du être remplacés pour assurer une connexion stable.
                 \item \textbf{Problèmes de source inconnu}: Il nous est arrivé de rencontrer des problèmes de connectivité entre les équipements sans raison apparente. En effet une machine rencontrais de problèmes lors des différents ping, la majorité des paquets étaient perdus. Après plusieurs heures de recherche, nous avons fait la conclusion qu'il s'agissait d'un problème matérielle.
+                \item \textbf{Problèmes de configuration}: Initialement, la configuration des vlan sur la VM qui nous servait de routeur était réalisé en utilisant netplan. Cependant, nous avons rencontré un très grand nombre de soucis de connectivité entre les différents vlan et notamment avec le serveur DHCP. En effet les requêtes DHCP Request / Offer était bloqué quelque part dans le réseau. Après plusieurs heures de recherche, nous avons décidé de changer de méthode de configuration des vlan et de passer par la configuration des interfaces réseaux en utilisant directement les commandes ip link. 
             \end{itemize}
 
         \section{Pistes d'amélioration}
