@@ -50,6 +50,30 @@
     \chapter{Architecture du réseau}
         \section{Vlan}
         \section{DHCP}
+            Dans les consignes, nous devions mettre en place un service DHCP qui permettait de fournir une adresse IP à toutes les machines du réseau. 
+            
+            Pour cela, nous avons utilisé le service isc-dhcp-server présent sur les distributions Ubuntu.
+            \subsection{Configuration serveur}
+                Pour configurer le serveur DHCP, nous avons modifié le fichier /etc/dhcp/dhcpd.conf. 
+                Dans ce fichier, nous devons déclaré chaque sous-réseaux/vlans comme suit :
+                
+                    \begin{verbatim}
+                    #Production
+                    subnet 192.168.10.0 netmask 255.255.255.0 {
+                        range 192.168.10.1 192.168.10.250;
+                        option routers 192.168.10.254;
+                        option broadcast-address 192.168.10.255;
+                    }
+                    \end{verbatim}
+                
+                Ici, nous déclarons le sous-réseau Production avec une plage d'adresse allant de 192
+                168.10.1 jusqu'à 192.168.10.250 et une passerelle par défaut à 192.168.10.254.
+
+                Nous avons choisi de partir sur des plages d'adresses de 250 adresses pour chaque sous-réseau, ce qui nous permet de gérer un maximum de 250 machines par sous-réseau, ainsi que de garder 3 adresses en réserve.
+                Tous les sous-réseaux 
+
+
+
         \section{Firewall}
         \section{}
 
