@@ -59,12 +59,12 @@
                 Dans ce fichier, nous devons déclaré chaque sous-réseaux/vlans comme suit :
                 
                     \begin{verbatim}
-                    #Production
-                    subnet 192.168.10.0 netmask 255.255.255.0 {
-                        range 192.168.10.1 192.168.10.250;
-                        option routers 192.168.10.254;
-                        option broadcast-address 192.168.10.255;
-                    }
+#Production
+subnet 192.168.10.0 netmask 255.255.255.0 {
+    range 192.168.10.1 192.168.10.250;
+    option routers 192.168.10.254;
+    option broadcast-address 192.168.10.255;
+}
                     \end{verbatim}
                 
                 Ici, nous déclarons le sous-réseau Production avec une plage d'adresse allant de 192
@@ -78,48 +78,68 @@
         \section{Firewall}
         \section{Configuration des Switches et Réseaux VLAN}
 
-\subsection{VLAN (Virtual Local Area Network)}
-Les VLANs (Virtual Local Area Networks) permettent de segmenter le réseau en sous-réseaux logiques distincts au sein d'une même infrastructure physique. En assignant des ports de switch à différents VLANs, il est possible de créer des réseaux indépendants, ce qui améliore la sécurité et limite la diffusion de paquets broadcast aux appareils d'un même VLAN. Par exemple, les départements \texttt{Production}, \texttt{Commercial}, et \texttt{Administration} peuvent être assignés respectivement aux VLANs 10, 20, et 30, permettant ainsi une séparation logique de leurs flux réseau.
+            \subsection{VLAN (Virtual Local Area Network)}
+                Les VLANs (Virtual Local Area Networks) permettent de segmenter le réseau en sous-réseaux logiques distincts au sein d'une même infrastructure physique. En assignant des ports de switch à différents VLANs, il est possible de créer des réseaux indépendants, ce qui améliore la sécurité et limite la diffusion de paquets broadcast aux appareils d'un même VLAN. Par exemple, les départements \texttt{Production}, \texttt{Commercial}, et \texttt{Administration} peuvent être assignés respectivement aux VLANs 10, 20, et 30, permettant ainsi une séparation logique de leurs flux réseau.
 
-La configuration de VLANs se fait en assignant une \texttt{VLAN ID} spécifique aux ports du switch souhaités. Un switch peut gérer plusieurs VLANs, chacun étant isolé des autres, sauf si une communication inter-VLAN est mise en place via un routeur ou un switch de niveau 3.
+                La configuration de VLANs se fait en assignant une \texttt{VLAN ID} spécifique aux ports du switch souhaités. Un switch peut gérer plusieurs VLANs, chacun étant isolé des autres, sauf si une communication inter-VLAN est mise en place via un routeur ou un switch de niveau 3.
 
-\subsection{Trunk}
-Le mode trunk est utilisé pour permettre à plusieurs VLANs de traverser un lien unique entre deux switches. Les liens trunk encapsulent les paquets des différents VLANs avec un identifiant (généralement via l'encapsulation IEEE 802.1Q), permettant ainsi de transporter les données de plusieurs VLANs sur un même câble.
+            \subsection{Trunk}
+                Le mode trunk est utilisé pour permettre à plusieurs VLANs de traverser un lien unique entre deux switches. Les liens trunk encapsulent les paquets des différents VLANs avec un identifiant (généralement via l'encapsulation IEEE 802.1Q), permettant ainsi de transporter les données de plusieurs VLANs sur un même câble.
 
-Dans notre infrastructure, les ports configurés en mode trunk assurent la liaison entre les switches des deux bâtiments, transportant les VLANs 10, 20, 50, 60 et 100. Cette configuration permet aux différents VLANs de rester interconnectés d'un bâtiment à l'autre tout en restant isolés les uns des autres au niveau logique. 
+                Dans notre infrastructure, les ports configurés en mode trunk assurent la liaison entre les switches des deux bâtiments, transportant les VLANs 10, 20, 50, 60 et 100. Cette configuration permet aux différents VLANs de rester interconnectés d'un bâtiment à l'autre tout en restant isolés les uns des autres au niveau logique. 
 
-Pour configurer un port en mode trunk, nous utilisons la commande suivante sur un switch Cisco :
+                Pour configurer un port en mode trunk, nous utilisons la commande suivante sur un switch Cisco :
 
-\begin{verbatim}
+                \begin{verbatim}
 interface f0/8
  switchport mode trunk
  switchport trunk allowed vlan 10,20,50,60,100
  no shutdown
-\end{verbatim}
+                \end{verbatim}
 
-\subsection{Redondance entre bâtiments}
-Afin d'assurer la continuité de service en cas de panne de lien entre les bâtiments, nous avons mis en place une redondance en utilisant des liens supplémentaires entre les switches principaux de chaque bâtiment. En cas de défaillance du lien principal, le trafic peut emprunter un lien secondaire pour maintenir la communication entre les VLANs des deux bâtiments. Cette redondance améliore la résilience de notre infrastructure et minimise les interruptions réseau en cas de défaillance matérielle ou de câble.
+            \subsection{Redondance entre bâtiments}
+                Afin d'assurer la continuité de service en cas de panne de lien entre les bâtiments, nous avons mis en place une redondance en utilisant des liens supplémentaires entre les switches principaux de chaque bâtiment. En cas de défaillance du lien principal, le trafic peut emprunter un lien secondaire pour maintenir la communication entre les VLANs des deux bâtiments. Cette redondance améliore la résilience de notre infrastructure et minimise les interruptions réseau en cas de défaillance matérielle ou de câble.
 
-\subsection{Spanning Tree Protocol (STP)}
-Le Spanning Tree Protocol (STP) est un protocole de niveau 2 conçu pour éviter les boucles de réseau dans les topologies redondantes. Lorsque plusieurs chemins sont disponibles entre les switches, STP désactive temporairement certains de ces chemins, formant un arbre sans boucle entre les switches connectés. 
+            \subsection{Spanning Tree Protocol (STP)}
+                Le Spanning Tree Protocol (STP) est un protocole de niveau 2 conçu pour éviter les boucles de réseau dans les topologies redondantes. Lorsque plusieurs chemins sont disponibles entre les switches, STP désactive temporairement certains de ces chemins, formant un arbre sans boucle entre les switches connectés. 
 
-Dans notre réseau, STP détecte automatiquement les boucles potentielles entre les liens des bâtiments et désactive les chemins redondants au besoin, tout en gardant une connexion de secours disponible. Cela permet de prévenir la saturation du réseau et les tempêtes de broadcast.
+                Dans notre réseau, STP détecte automatiquement les boucles potentielles entre les liens des bâtiments et désactive les chemins redondants au besoin, tout en gardant une connexion de secours disponible. Cela permet de prévenir la saturation du réseau et les tempêtes de broadcast.
 
-La configuration STP est souvent automatique sur les switches modernes, mais elle peut être optimisée en configurant les priorités des switches pour décider lequel sera le root bridge. Voici un exemple de commande pour configurer la priorité d'un switch :
+                La configuration STP est souvent automatique sur les switches modernes, mais elle peut être optimisée en configurant les priorités des switches pour décider lequel sera le root bridge. Voici un exemple de commande pour configurer la priorité d'un switch :
 
-\begin{verbatim}
+                \begin{verbatim}
 spanning-tree vlan 10 priority 4096
-\end{verbatim}
+                \end{verbatim}
 
-En abaissant la priorité d'un switch pour un VLAN donné, on peut le forcer à devenir le root bridge pour ce VLAN, ce qui optimise le chemin entre les switches.
+                En abaissant la priorité d'un switch pour un VLAN donné, on peut le forcer à devenir le root bridge pour ce VLAN, ce qui optimise le chemin entre les switches.
 
-\subsection{Résumé}
-En résumé, l'utilisation des VLANs permet une segmentation efficace du réseau, tandis que le mode trunk facilite le transport des VLANs sur les liens entre switches. La redondance entre bâtiments améliore la résilience, et le protocole STP permet de gérer les boucles, garantissant ainsi une infrastructure réseau stable et performante.
+            \subsection{Résumé}
+                En résumé, l'utilisation des VLANs permet une segmentation efficace du réseau, tandis que le mode trunk facilite le transport des VLANs sur les liens entre switches. La redondance entre bâtiments améliore la résilience, et le protocole STP permet de gérer les boucles, garantissant ainsi une infrastructure réseau stable et performante.
 
+
+        \section{Services Communs}
+            \subsection{Système de partage de fichiers}
+                Le partage de fichier permet aux utilisateurs de stocker et d'accéder à des fichiers sur un serveur centralisé. Dans notre cas pour simplifier sa mise en place, nous avons simplement installé un serveur ftp sur le serveur de production via le service vsftpd. Ce service permet de partager des fichiers entre les différents utilisateurs du réseau.
+            \subsection{Système de sauvegarde}
+                La sauvegarde des données est un élément essentiel de toute infrastructure informatique. En cas de panne matérielle, de corruption de données ou de sinistre, les sauvegardes permettent de restaurer les données et de minimiser les pertes. Pour notre infrastructure, nous avons pour des raison de simplicité mis en place un serveur ftp via le service vsftpd sur le serveur de production.
     \chapter{Conclusion}
         \section{Difficultés rencontrées}
-        \section{Pistes d'amélioration}
 
+            Lors de la mise en place de l'infrastructure, nous avons du faire face à plusieurs difficultés qui ont ralenti notre progression. Parmi les problèmes rencontrés, nous pouvons citer :
+
+            \begin{itemize}
+                \item \textbf{Préconfiguration des switchs}: Certains switchs avaient déjà une configuration préexistante. Ces configurations entravaient la mise en place de notre architecture réseau et ont nécessité une renitialisation complète des switchs.
+                \item \textbf{Cables défectueux}: Certains câbles ethernet étaient défectueux, ce qui a causé des problèmes de connectivité entre les équipements. Ces câbles ont du être remplacés pour assurer une connexion stable.
+                \item \textbf{Problèmes de source inconnu}: Il nous est arrivé de rencontrer des problèmes de connectivité entre les équipements sans raison apparente. En effet une machine rencontrais de problèmes lors des différents ping, la majorité des paquets étaient perdus. Après plusieurs heures de recherche, nous avons fait la conclusion qu'il s'agissait d'un problème matérielle.
+            \end{itemize}
+
+        \section{Pistes d'amélioration}
+            La solution que nous avons mise en place ne réponds que partiellement aux besoins de l'entreprise. En effet, certains services ne fonctionne que partiellement et d'autres ne sont pas encore mis en place. Pour améliorer notre infrastructure, nous pourrions mettre en place les services suivants :
+
+            \begin{itemize}
+                \item \textbf{Un serveur de partage de fichier}: Le système actuel ne permet que la connexion via ftp, sans permettre la création de répertoire pour chaque utilisateur. Pour améliorer ce service, nous pourrions configurer plus en détail le serveur ftp pour permettre la création de répertoire pour chaque utilisateur.
+                \item \textbf{Un serveur de sauvegarde}: Le système actuel ne permet que la connexion via ftp, sans permettre la création de répertoire pour chaque utilisateur. Pour améliorer ce service, nous pourrions configurer plus en détail le serveur ftp pour permettre la création de répertoire pour chaque utilisateur. De plius nous pourrions mettre en place un système de sauvegarde automatique des données.
+            \end{itemize} 
     \chapter*{Annexes}
         \section{Diagramme de Flux}
         \section{Schéma réseau logique}
