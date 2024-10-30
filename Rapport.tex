@@ -53,7 +53,7 @@
         \section{Firewall}
         \section{Switch}
         Nous avons configuré des switchs Cisco 2960 Series pour assurer la redondance entre deux bâtiments sur cinq VLANs : 10, 20, 50, 60, et 100. Chaque switch a été configuré avec des ports en mode access et trunk pour permettre une communication efficace et sécurisée entre les différents segments du réseau. Les configurations incluent la définition des VLANs, l'attribution des ports aux VLANs, et la configuration des trunks pour permettre le passage des VLANs nécessaires.
-
+        Il y a un total de 4 switchs, 2 dans chaque bâtiment, qui sont connectés entre eux via 2 cable pour assurer la redondance du réseau. Les switchs sont configurés pour utiliser le protocole STP (Spanning Tree Protocol) afin de gérer les boucles de commutation et d'assurer la redondance du réseau.
     \chapter{Conclusion}
         \section{Difficultés rencontrées}
         \section{Pistes d'amélioration}
