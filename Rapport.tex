@@ -2,6 +2,7 @@
 
 \usepackage{authblk}
 \usepackage{hyperref}
+\usepackage{graphicx}
 %French-specific commands
 %--------------------------------------
 \usepackage[french]{babel}
@@ -57,6 +58,7 @@
             Pour configurer le serveur DHCP, il faut modifier le fichier /etc/dhcp/dhcpd.conf. 
             Dans ce fichier, chaque sous-réseaux/vlans doit être déclaré comme suit :
                 
+
             \begin{verbatim}
             #Production
             subnet 192.168.10.0 netmask 255.255.255.0 {
@@ -65,6 +67,7 @@
                 option broadcast-address 192.168.10.255;
             }
             \end{verbatim}
+
                 
             Ici, le sous-réseau Production a une plage d'adresse allant de 192.168.10.1 jusqu'à 192.168.10.250 et une passerelle par défaut à 192.168.10.254.
 
@@ -106,13 +109,92 @@
             Une fois l'exécution de la commande terminée, la commande '\textbf{ip a}' permet de vérifier que le client a bien reçu une adresse IP.
 
         \section{Firewall}
-        \section{}
+            \subsection{Configuration}
+            Nous avons choisi de mettre en place un firewall sur notre réseau pour sécuriser les communications entre les différents VLANs. Pour cela, nous avons utilisé le service iptables présent sur les distributions Ubuntu.
+            Le firewall est configuré sur la VM qui nous sert de routeur et qui permet de faire transiter les paquets entre les différents VLANs. Nous sommes partis d'une base qui refuse tout le trafic et nous avons autorisé uniquement les communications que nous souhaitions.
+
+            \subsection{Règles}
+            Pour cela nous avons mis en place un certains nombres de règles. L'un des objectifs était d'empêcher les communications entre les différents VLANs. Pour cela, nous avons mis en place les règles suivantes :
+            \begin{verbatim}
+iptables -A FORWARD -s 192.168.10.0/24 -d 192.168.20.0/24 -j DROP
+iptables -A FORWARD -s 192.168.10.0/24 -d 192.168.60.0/24 -j DROP
+iptables -A FORWARD -s 192.168.20.0/24 -d 192.168.10.0/24 -j DROP
+iptables -A FORWARD -s 192.168.20.0/24 -d 192.168.60.0/24 -j DROP
+iptables -A FORWARD -s 192.168.60.0/24 -d 192.168.10.0/24 -j DROP
+iptables -A FORWARD -s 192.168.60.0/24 -d 192.168.20.0/24 -j DROP
+            \end{verbatim}
+            Nous avons également mis en place des règles pour autoriser les communications entre les différents VLANs à communiquer avec le vlan contenant tous les services communs. Tous les VLANs ont également la possibilité de communiquer avec la DMZ via des requêtes HTTP et HTTPS et sont également autorisés à communiquer avec internet via le NAT. Internet dans notre projet étant représenté par une VM a l'extérieur du réseau. 
+
+        \section{Configuration des Switches et Réseaux VLAN}
+
+            \subsection{VLAN (Virtual Local Area Network)}
+                Les VLANs (Virtual Local Area Networks) permettent de segmenter le réseau en sous-réseaux logiques distincts au sein d'une même infrastructure physique. En assignant des ports de switch à différents VLANs, il est possible de créer des réseaux indépendants, ce qui améliore la sécurité et limite la diffusion de paquets broadcast aux appareils d'un même VLAN. Par exemple, les départements \texttt{Production}, \texttt{Commercial}, et \texttt{Administration} peuvent être assignés respectivement aux VLANs 10, 20, et 30, permettant ainsi une séparation logique de leurs flux réseau.
+
+                La configuration de VLANs se fait en assignant une \texttt{VLAN ID} spécifique aux ports du switch souhaités. Un switch peut gérer plusieurs VLANs, chacun étant isolé des autres, sauf si une communication inter-VLAN est mise en place via un routeur ou un switch de niveau 3.
+
+            \subsection{Trunk}
+                Le mode trunk est utilisé pour permettre à plusieurs VLANs de traverser un lien unique entre deux switches. Les liens trunk encapsulent les paquets des différents VLANs avec un identifiant (généralement via l'encapsulation IEEE 802.1Q), permettant ainsi de transporter les données de plusieurs VLANs sur un même câble.
+
+                Dans notre infrastructure, les ports configurés en mode trunk assurent la liaison entre les switches des deux bâtiments, transportant les VLANs 10, 20, 50, 60 et 100. Cette configuration permet aux différents VLANs de rester interconnectés d'un bâtiment à l'autre tout en restant isolés les uns des autres au niveau logique. 
+
+                Pour configurer un port en mode trunk, nous utilisons la commande suivante sur un switch Cisco :
+
+                \begin{verbatim}
+interface f0/8
+ switchport mode trunk
+ switchport trunk allowed vlan 10,20,50,60,100
+ no shutdown
+                \end{verbatim}
+
+            \subsection{Redondance entre bâtiments}
+                Afin d'assurer la continuité de service en cas de panne de lien entre les bâtiments, nous avons mis en place une redondance en utilisant des liens supplémentaires entre les switches principaux de chaque bâtiment. En cas de défaillance du lien principal, le trafic peut emprunter un lien secondaire pour maintenir la communication entre les VLANs des deux bâtiments. Cette redondance améliore la résilience de notre infrastructure et minimise les interruptions réseau en cas de défaillance matérielle ou de câble.
+
+            \subsection{Spanning Tree Protocol (STP)}
+                Le Spanning Tree Protocol (STP) est un protocole de niveau 2 conçu pour éviter les boucles de réseau dans les topologies redondantes. Lorsque plusieurs chemins sont disponibles entre les switches, STP désactive temporairement certains de ces chemins, formant un arbre sans boucle entre les switches connectés. 
+
+                Dans notre réseau, STP détecte automatiquement les boucles potentielles entre les liens des bâtiments et désactive les chemins redondants au besoin, tout en gardant une connexion de secours disponible. Cela permet de prévenir la saturation du réseau et les tempêtes de broadcast.
+
+                La configuration STP est souvent automatique sur les switches modernes, mais elle peut être optimisée en configurant les priorités des switches pour décider lequel sera le root bridge. Voici un exemple de commande pour configurer la priorité d'un switch :
+
+                \begin{verbatim}
+spanning-tree vlan 10 priority 4096
+                \end{verbatim}
+
+                En abaissant la priorité d'un switch pour un VLAN donné, on peut le forcer à devenir le root bridge pour ce VLAN, ce qui optimise le chemin entre les switches.
+
+            \subsection{Résumé}
+                En résumé, l'utilisation des VLANs permet une segmentation efficace du réseau, tandis que le mode trunk facilite le transport des VLANs sur les liens entre switches. La redondance entre bâtiments améliore la résilience, et le protocole STP permet de gérer les boucles, garantissant ainsi une infrastructure réseau stable et performante.
 
 
+        \section{Services Communs}
+            \subsection{Système de partage de fichiers}
+                Le partage de fichier permet aux utilisateurs de stocker et d'accéder à des fichiers sur un serveur centralisé. Dans notre cas pour simplifier sa mise en place, nous avons simplement installé un serveur ftp sur le serveur de production via le service vsftpd. Ce service permet de partager des fichiers entre les différents utilisateurs du réseau.
+            \subsection{Système de sauvegarde}
+                La sauvegarde des données est un élément essentiel de toute infrastructure informatique. En cas de panne matérielle, de corruption de données ou de sinistre, les sauvegardes permettent de restaurer les données et de minimiser les pertes. Pour notre infrastructure, nous avons pour des raison de simplicité mis en place un serveur ftp via le service vsftpd sur le serveur de production.
+        \section{Serveur Web et DMZ}
+            \subsection{Serveur Web}
+                Le serveur web contient les pages web de l'entreprise et est accessible depuis Internet. Il permet de présenter l'entreprise, ses services et ses produits aux clients potentiels. Le serveur web est hébergé sur une machine virtuelle dans la DMZ et est accessible depuis l'extérieur via le protocole HTTP et HTTPS.
+            \subsection{DMZ}
+                La DMZ (Demilitarized Zone) est une zone tampon située entre le réseau interne et le réseau externe (Internet). Elle permet d'isoler les services exposés au public, tels que les serveurs web, les serveurs de messagerie ou les serveurs DNS, des réseaux internes. Sur ce réseau, la DMZ est représentée par une machine virtuelle qui héberge un serveur web accessible depuis Internet. Cette machine est connectée à un VLAN spécifique qui la sépare du reste du réseau interne et les règles de filtrage du firewall permettent de contrôler les communications entre la DMZ et les autres VLANs.
     \chapter{Conclusion}
         \section{Difficultés rencontrées}
-        \section{Pistes d'amélioration}
 
+            Lors de la mise en place de l'infrastructure, nous avons du faire face à plusieurs difficultés qui ont ralenti notre progression. Parmi les problèmes rencontrés, nous pouvons citer :
+
+            \begin{itemize}
+                \item \textbf{Préconfiguration des switchs}: Certains switchs avaient déjà une configuration préexistante. Ces configurations entravaient la mise en place de notre architecture réseau et ont nécessité une renitialisation complète des switchs.
+                \item \textbf{Cables défectueux}: Certains câbles ethernet étaient défectueux, ce qui a causé des problèmes de connectivité entre les équipements. Ces câbles ont du être remplacés pour assurer une connexion stable.
+                \item \textbf{Problèmes de source inconnu}: Il nous est arrivé de rencontrer des problèmes de connectivité entre les équipements sans raison apparente. En effet une machine rencontrais de problèmes lors des différents ping, la majorité des paquets étaient perdus. Après plusieurs heures de recherche, nous avons fait la conclusion qu'il s'agissait d'un problème matérielle.
+                \item \textbf{Problèmes de configuration}: Initialement, la configuration des vlan sur la VM qui nous servait de routeur était réalisé en utilisant netplan. Cependant, nous avons rencontré un très grand nombre de soucis de connectivité entre les différents vlan et notamment avec le serveur DHCP. En effet les requêtes DHCP Request / Offer était bloqué quelque part dans le réseau. Après plusieurs heures de recherche, nous avons décidé de changer de méthode de configuration des vlan et de passer par la configuration des interfaces réseaux en utilisant directement les commandes ip link. 
+            \end{itemize}
+
+        \section{Pistes d'amélioration}
+            La solution que nous avons mise en place ne réponds que partiellement aux besoins de l'entreprise. En effet, certains services ne fonctionne que partiellement et d'autres ne sont pas encore mis en place. Pour améliorer notre infrastructure, nous pourrions mettre en place les services suivants :
+
+            \begin{itemize}
+                \item \textbf{Un serveur de partage de fichier}: Le système actuel ne permet que la connexion via ftp, sans permettre la création de répertoire pour chaque utilisateur. Pour améliorer ce service, nous pourrions configurer plus en détail le serveur ftp pour permettre la création de répertoire pour chaque utilisateur.
+                \item \textbf{Un serveur de sauvegarde}: Le système actuel ne permet que la connexion via ftp, sans permettre la création de répertoire pour chaque utilisateur. Pour améliorer ce service, nous pourrions configurer plus en détail le serveur ftp pour permettre la création de répertoire pour chaque utilisateur. De plius nous pourrions mettre en place un système de sauvegarde automatique des données.
+            \end{itemize} 
     \chapter*{Annexes}
         \section{Diagramme de Flux}
         \section{Schéma réseau logique}
