@@ -18,10 +18,10 @@
 
 
 \titleformat{\chapter}[display]
-  {\normalfont\huge\bfseries} % Style de titre
-  {} % Préfixe vide
-  {0pt} % Espacement entre le titre et le contenu
-  {\huge} % Style du titre
+    {\normalfont\huge\bfseries} % Style de titre
+    {} % Préfixe vide
+    {0pt} % Espacement entre le titre et le contenu
+    {\huge} % Style du titre
 
 \renewcommand{\chaptername}{}
 
@@ -54,7 +54,16 @@
                 \item Gillian Le Pévédic : Configuration des VLANs sur les Switchs et 
                 \item François Besnard :  Configuration du Firewall, de la DMZ
                 \item Alexandre Floury : Configuration du serveur DHCP
+            \end{itemize}
 
+            En résumé, voici la répartition des machines virtuelles sur les machines de TP:
+            \begin{figure}
+                \centering
+                \includegraphics[width=0.8\textwidth]{images/Repartition_machines_projetReseau.png}
+                \caption{Répartition des machines virtuelles}
+            \end{figure}
+
+            Dans l'ordre de gauche à droite, les machines virtuelles sont respectivements celles de : Gillian, Lucas, Alexandre et François.
 
     \chapter{Architecture du réseau}
         \section{Vlan}
@@ -124,12 +133,12 @@
             \subsection{Règles}
             Pour cela nous avons mis en place un certains nombres de règles. L'un des objectifs était d'empêcher les communications entre les différents VLANs. Pour cela, nous avons mis en place les règles suivantes :
             \begin{verbatim}
-iptables -A FORWARD -s 192.168.10.0/24 -d 192.168.20.0/24 -j DROP
-iptables -A FORWARD -s 192.168.10.0/24 -d 192.168.60.0/24 -j DROP
-iptables -A FORWARD -s 192.168.20.0/24 -d 192.168.10.0/24 -j DROP
-iptables -A FORWARD -s 192.168.20.0/24 -d 192.168.60.0/24 -j DROP
-iptables -A FORWARD -s 192.168.60.0/24 -d 192.168.10.0/24 -j DROP
-iptables -A FORWARD -s 192.168.60.0/24 -d 192.168.20.0/24 -j DROP
+                iptables -A FORWARD -s 192.168.10.0/24 -d 192.168.20.0/24 -j DROP
+                iptables -A FORWARD -s 192.168.10.0/24 -d 192.168.60.0/24 -j DROP
+                iptables -A FORWARD -s 192.168.20.0/24 -d 192.168.10.0/24 -j DROP
+                iptables -A FORWARD -s 192.168.20.0/24 -d 192.168.60.0/24 -j DROP
+                iptables -A FORWARD -s 192.168.60.0/24 -d 192.168.10.0/24 -j DROP
+                iptables -A FORWARD -s 192.168.60.0/24 -d 192.168.20.0/24 -j DROP
             \end{verbatim}
             Nous avons également mis en place des règles pour autoriser les communications entre les différents VLANs à communiquer avec le vlan contenant tous les services communs. Tous les VLANs ont également la possibilité de communiquer avec la DMZ via des requêtes HTTP et HTTPS et sont également autorisés à communiquer avec internet via le NAT. Internet dans notre projet étant représenté par une VM a l'extérieur du réseau. 
 
@@ -148,10 +157,10 @@ iptables -A FORWARD -s 192.168.60.0/24 -d 192.168.20.0/24 -j DROP
                 Pour configurer un port en mode trunk, nous utilisons la commande suivante sur un switch Cisco :
 
                 \begin{verbatim}
-interface f0/8
- switchport mode trunk
- switchport trunk allowed vlan 10,20,50,60,100
- no shutdown
+                    interface f0/8
+                    switchport mode trunk
+                    switchport trunk allowed vlan 10,20,50,60,100
+                    no shutdown
                 \end{verbatim}
 
             \subsection{Redondance entre bâtiments}
@@ -165,7 +174,7 @@ interface f0/8
                 La configuration STP est souvent automatique sur les switches modernes, mais elle peut être optimisée en configurant les priorités des switches pour décider lequel sera le root bridge. Voici un exemple de commande pour configurer la priorité d'un switch :
 
                 \begin{verbatim}
-spanning-tree vlan 10 priority 4096
+                    spanning-tree vlan 10 priority 4096
                 \end{verbatim}
 
                 En abaissant la priorité d'un switch pour un VLAN donné, on peut le forcer à devenir le root bridge pour ce VLAN, ce qui optimise le chemin entre les switches.
@@ -206,7 +215,15 @@ spanning-tree vlan 10 priority 4096
     \chapter*{Annexes}
         \section{Diagramme de Flux}
         \section{Schéma réseau logique}
+            \begin{figure}
+                \centeringSS
+                \includegraphics[width=0.8\textwidth]{images/Schema_logique.png}
+                \caption{Schéma réseau logique}
         \section{Schéma réseau physique}
+            \begin{figure}
+                \centering
+                \includegraphics[width=0.8\textwidth]{images/Schema_physique.png}
+                \caption{Schéma réseau physique}
         \section{Plan d'adressage}
         
 
