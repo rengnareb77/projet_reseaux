@@ -52,21 +52,42 @@
             \begin{itemize}
                 \item Lucas Béranger : Configuration des services communs
                 \item Gillian Le Pévédic : Configuration des VLANs sur les Switchs et 
-                \item François Besnard :  Configuration du Firewall, de la DMZ
+                \item François Besnard :  Configuration du routeur servant de Box, du Firewall et de la DMZ
                 \item Alexandre Floury : Configuration du serveur DHCP
             \end{itemize}
 
             En résumé, voici la répartition des machines virtuelles sur les machines de TP:
             \begin{figure}
                 \centering
-                \includegraphics[width=0.8\textwidth]{images/Repartition_machines_projetReseau.png}
+                \includegraphics[width=0.8\textwidth]{Images/Repartition_machines_projetReseau.png}
                 \caption{Répartition des machines virtuelles}
             \end{figure}
 
             Dans l'ordre de gauche à droite, les machines virtuelles sont respectivements celles de : Gillian, Lucas, Alexandre et François.
 
     \chapter{Architecture du réseau}
-        \section{Vlan}
+    \section{Le Routeur}
+    Au sein du projet, le routeur qui permet de faire transiter les paquets entre les différents VLANs est une machine virtuelle sous Ubuntu. Cette machine est équipée de deux interfaces réseaux, une pour chaque bâtiment. Pour que les paquets transitent correctement entre les différents VLANs, il a ainsi fallu configurer les interfaces réseaux de la machine virtuelle pour qu'elle puisse gérer les différents VLANs.
+        \subsection{Configuration}
+        Pour configurer les interfaces réseaux de la machine virtuelle, il a fallu utiliser les commandes ip link. Voici un exemple de configuration pour la VM qui nous sert de routeur :
+        \begin{verbatim}
+
+    sudo ip link set enp0s9 up
+    sudo ip link add link enp0s9 name enp0s9.10 type vlan id 10 
+    sudo ip addr add 192,168,10,254 dev enp0s9.10 
+    sudo ip link set enp0s9.10 up
+        \end{verbatim}
+        Il faut démarrer l'interface que l'on souhaite utiliser, puis créer une interface virtuelle pour chaque VLAN que l'on souhaite gérer. Il faut répéter cette configuration pour chaque VLAN que l'on souhaite gérer sur la machine virtuelle en veillant bien à modifier l'interface quand elle doit être modifier. 
+        \subsection{Relai DHCP}
+        Pour que les machines des différents VLANs puissent obtenir une adresse IP, il a fallu configurer la machine virtuelle pour qu'elle fasse office de relai DHCP. Pour cela, il a fallu installer le service isc-dhcp-relay et configurer le fichier /etc/default/isc-dhcp-relay pour qu'il pointe vers le serveur DHCP.
+        \begin{verbatim}
+    # What servers should the DHCP relay forward requests to?
+    SERVERS="192.168.50.250"
+
+    # On what interfaces should the DHCP relay (dhrelay) serve DHCP requests?
+    INTERFACES="enp0s9.10"
+        \end{verbatim}
+        Le relai DHCP pointe ainsi vers le serveur DHCP qui est sur le VLAN 50 et transmettra les requêtes DHCP des différents VLANs vers le serveur DHCP.
         \section{DHCP}
             Dans les consignes, il était demandé de mettre en place un service DHCP qui permettait de fournir une adresse IP à toutes les machines du réseau. 
             
@@ -76,14 +97,14 @@
             Dans ce fichier, chaque sous-réseaux/vlans doit être déclaré comme suit :
                 
 
-            \begin{verbatim}
-            #Production
-            subnet 192.168.10.0 netmask 255.255.255.0 {
-                range 192.168.10.1 192.168.10.250;
-                option routers 192.168.10.254;
-                option broadcast-address 192.168.10.255;
-            }
-            \end{verbatim}
+    \begin{verbatim}
+    #Production
+    subnet 192.168.10.0 netmask 255.255.255.0 {
+        range 192.168.10.1 192.168.10.250;
+        option routers 192.168.10.254;
+        option broadcast-address 192.168.10.255;
+    }
+    \end{verbatim}
 
                 
             Ici, le sous-réseau Production a une plage d'adresse allant de 192.168.10.1 jusqu'à 192.168.10.250 et une passerelle par défaut à 192.168.10.254.
@@ -133,12 +154,12 @@
             \subsection{Règles}
             Pour cela nous avons mis en place un certains nombres de règles. L'un des objectifs était d'empêcher les communications entre les différents VLANs. Pour cela, nous avons mis en place les règles suivantes :
             \begin{verbatim}
-                iptables -A FORWARD -s 192.168.10.0/24 -d 192.168.20.0/24 -j DROP
-                iptables -A FORWARD -s 192.168.10.0/24 -d 192.168.60.0/24 -j DROP
-                iptables -A FORWARD -s 192.168.20.0/24 -d 192.168.10.0/24 -j DROP
-                iptables -A FORWARD -s 192.168.20.0/24 -d 192.168.60.0/24 -j DROP
-                iptables -A FORWARD -s 192.168.60.0/24 -d 192.168.10.0/24 -j DROP
-                iptables -A FORWARD -s 192.168.60.0/24 -d 192.168.20.0/24 -j DROP
+    iptables -A FORWARD -s 192.168.10.0/24 -d 192.168.20.0/24 -j DROP
+    iptables -A FORWARD -s 192.168.10.0/24 -d 192.168.60.0/24 -j DROP
+    iptables -A FORWARD -s 192.168.20.0/24 -d 192.168.10.0/24 -j DROP
+    iptables -A FORWARD -s 192.168.20.0/24 -d 192.168.60.0/24 -j DROP
+    iptables -A FORWARD -s 192.168.60.0/24 -d 192.168.10.0/24 -j DROP
+    iptables -A FORWARD -s 192.168.60.0/24 -d 192.168.20.0/24 -j DROP
             \end{verbatim}
             Nous avons également mis en place des règles pour autoriser les communications entre les différents VLANs à communiquer avec le vlan contenant tous les services communs. Tous les VLANs ont également la possibilité de communiquer avec la DMZ via des requêtes HTTP et HTTPS et sont également autorisés à communiquer avec internet via le NAT. Internet dans notre projet étant représenté par une VM a l'extérieur du réseau. 
 
@@ -157,10 +178,10 @@
                 Pour configurer un port en mode trunk, nous utilisons la commande suivante sur un switch Cisco :
 
                 \begin{verbatim}
-                    interface f0/8
-                    switchport mode trunk
-                    switchport trunk allowed vlan 10,20,50,60,100
-                    no shutdown
+    interface f0/8
+    switchport mode trunk
+    switchport trunk allowed vlan 10,20,50,60,100
+    no shutdown
                 \end{verbatim}
 
             \subsection{Redondance entre bâtiments}
@@ -174,7 +195,7 @@
                 La configuration STP est souvent automatique sur les switches modernes, mais elle peut être optimisée en configurant les priorités des switches pour décider lequel sera le root bridge. Voici un exemple de commande pour configurer la priorité d'un switch :
 
                 \begin{verbatim}
-                    spanning-tree vlan 10 priority 4096
+    spanning-tree vlan 10 priority 4096
                 \end{verbatim}
 
                 En abaissant la priorité d'un switch pour un VLAN donné, on peut le forcer à devenir le root bridge pour ce VLAN, ce qui optimise le chemin entre les switches.
@@ -216,14 +237,16 @@
         \section{Diagramme de Flux}
         \section{Schéma réseau logique}
             \begin{figure}
-                \centeringSS
-                \includegraphics[width=0.8\textwidth]{images/Schema_logique.png}
+                \centering
+                \includegraphics[width=0.8\textwidth]{Images/Schema_logique.png}
                 \caption{Schéma réseau logique}
+            \end{figure}
         \section{Schéma réseau physique}
             \begin{figure}
                 \centering
-                \includegraphics[width=0.8\textwidth]{images/Schema_physique.png}
+                \includegraphics[width=0.8\textwidth]{Images/Schema_physique.png}
                 \caption{Schéma réseau physique}
+            \end{figure}
         \section{Plan d'adressage}
         
 
