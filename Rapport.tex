@@ -1,8 +1,10 @@
-\documentclass[a4paper,12pt]{report}
+\documentclass[a4paper,12pt,openany]{report}
 
 \usepackage{authblk}
 \usepackage{hyperref}
 \usepackage{graphicx}
+\usepackage[toc,page]{appendix}
+\usepackage{float}               % Pour contrôler la position des figures
 %French-specific commands
 %--------------------------------------
 \usepackage[french]{babel}
@@ -16,6 +18,9 @@
     urlcolor=black
 }
 
+\renewcommand{\appendixname}{Annexe} % pour le nom des chapitres individuels
+\renewcommand{\appendixpagename}{Annexes} % pour le titre global de la page des annexes
+\renewcommand{\appendixtocname}{Annexes} % pour le titre dans la table des matières
 
 \titleformat{\chapter}[display]
     {\normalfont\huge\bfseries} % Style de titre
@@ -23,7 +28,6 @@
     {0pt} % Espacement entre le titre et le contenu
     {\huge} % Style du titre
 
-\renewcommand{\chaptername}{}
 
 
 \title{Rapport Projet réseaux}
@@ -42,6 +46,7 @@
 
     \tableofcontents
     \newpage
+    \listoffigures
 
     \chapter{Introduction}
         \section{Présentation de l'équipe}  
@@ -59,7 +64,12 @@
             En résumé, voici la répartition des machines virtuelles sur les machines de TP:
             \begin{figure}
                 \centering
+<<<<<<< HEAD
                 \includegraphics[width=0.8\textwidth]{Images/Repartition_machines_projetReseau.png}
+=======
+                \includegraphics[width=1.2
+                \textwidth]{Images/repartitions_machines.jpg}
+>>>>>>> 593e114 (Modif annexes)
                 \caption{Répartition des machines virtuelles}
             \end{figure}
 
@@ -142,7 +152,7 @@
             iface enp0s3 inet dhcp
             \end{verbatim}
 
-            Si plutard il y a besoin d'ajouter une nouvelle interface, il suffit de rajouter les lignes ci-dessus en changeant le nom de l'interface.
+            Si plus tard il y a besoin d'ajouter une nouvelle interface, il suffit de rajouter les lignes ci-dessus en changeant le nom de l'interface.
             Si le serveur est correctement configuré ainsi que le réseau, il reste à exécuter '\textbf{sudo dhclient}' afin de forcer le client à demander une adresse IP au serveur DHCP.
             Une fois l'exécution de la commande terminée, la commande '\textbf{ip a}' permet de vérifier que le client a bien reçu une adresse IP.
 
@@ -154,12 +164,21 @@
             \subsection{Règles}
             Pour cela nous avons mis en place un certains nombres de règles. L'un des objectifs était d'empêcher les communications entre les différents VLANs. Pour cela, nous avons mis en place les règles suivantes :
             \begin{verbatim}
+<<<<<<< HEAD
     iptables -A FORWARD -s 192.168.10.0/24 -d 192.168.20.0/24 -j DROP
     iptables -A FORWARD -s 192.168.10.0/24 -d 192.168.60.0/24 -j DROP
     iptables -A FORWARD -s 192.168.20.0/24 -d 192.168.10.0/24 -j DROP
     iptables -A FORWARD -s 192.168.20.0/24 -d 192.168.60.0/24 -j DROP
     iptables -A FORWARD -s 192.168.60.0/24 -d 192.168.10.0/24 -j DROP
     iptables -A FORWARD -s 192.168.60.0/24 -d 192.168.20.0/24 -j DROP
+=======
+iptables -A FORWARD -s 192.168.10.0/24 -d 192.168.20.0/24 -j DROP
+iptables -A FORWARD -s 192.168.10.0/24 -d 192.168.60.0/24 -j DROP
+iptables -A FORWARD -s 192.168.20.0/24 -d 192.168.10.0/24 -j DROP
+iptables -A FORWARD -s 192.168.20.0/24 -d 192.168.60.0/24 -j DROP
+iptables -A FORWARD -s 192.168.60.0/24 -d 192.168.10.0/24 -j DROP
+iptables -A FORWARD -s 192.168.60.0/24 -d 192.168.20.0/24 -j DROP
+>>>>>>> 593e114 (Modif annexes)
             \end{verbatim}
             Nous avons également mis en place des règles pour autoriser les communications entre les différents VLANs à communiquer avec le vlan contenant tous les services communs. Tous les VLANs ont également la possibilité de communiquer avec la DMZ via des requêtes HTTP et HTTPS et sont également autorisés à communiquer avec internet via le NAT. Internet dans notre projet étant représenté par une VM a l'extérieur du réseau. 
 
@@ -178,10 +197,17 @@
                 Pour configurer un port en mode trunk, nous utilisons la commande suivante sur un switch Cisco :
 
                 \begin{verbatim}
+<<<<<<< HEAD
     interface f0/8
     switchport mode trunk
     switchport trunk allowed vlan 10,20,50,60,100
     no shutdown
+=======
+interface f0/8
+switchport mode trunk
+switchport trunk allowed vlan 10,20,50,60,100
+no shutdown
+>>>>>>> 593e114 (Modif annexes)
                 \end{verbatim}
 
             \subsection{Redondance entre bâtiments}
@@ -233,6 +259,7 @@
                 \item \textbf{Un serveur de partage de fichier}: Le système actuel ne permet que la connexion via ftp, sans permettre la création de répertoire pour chaque utilisateur. Pour améliorer ce service, nous pourrions configurer plus en détail le serveur ftp pour permettre la création de répertoire pour chaque utilisateur.
                 \item \textbf{Un serveur de sauvegarde}: Le système actuel ne permet que la connexion via ftp, sans permettre la création de répertoire pour chaque utilisateur. Pour améliorer ce service, nous pourrions configurer plus en détail le serveur ftp pour permettre la création de répertoire pour chaque utilisateur. De plius nous pourrions mettre en place un système de sauvegarde automatique des données.
             \end{itemize} 
+<<<<<<< HEAD
     \chapter*{Annexes}
         \section{Diagramme de Flux}
         \section{Schéma réseau logique}
@@ -474,9 +501,33 @@ ACCEPT     all  --  192.168.100.0/24     anywhere
 Chain OUTPUT (policy ACCEPT)
 target     prot opt source               destination         
             \end{verbatim}
+=======
+    \begin{appendices}
+        \titleformat{\chapter}[hang]
+        {\normalfont\huge\bfseries} % Style de titre
+        {} % Préfixe vide
+        {0pt} % Espacement entre le titre et le contenu
+        {\huge} % Style du titre
+        \chapter{Diagramme de Flux}
+        \chapter{Schéma réseau logique}
+            \begin{figure}[H]
+                \centering
+                \includegraphics[width=1.0\textwidth]{Images/Schema_logique.jpg}
+                \caption{Schéma réseau logique}
+            \end{figure}
+        \chapter{Schéma réseau physique}
+            \begin{figure}[H]
+                \centering
+                \includegraphics[width=1.2\textwidth]{Images/Schema_physique.jpg}
+                \caption{Schéma réseau physique}
+            \end{figure}
+        \chapter{Plan d'adressage}
+            \begin{figure}[H]
+                \centering
+                \includegraphics[width=1.2\textwidth]{Images/Plan_adressage.pdf}
+                \caption{Plan d'adressage}
+            \end{figure}
+    \end{appendices}
+>>>>>>> 593e114 (Modif annexes)
         
-
-
-
-
 \end{document} 
