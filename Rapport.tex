@@ -248,6 +248,232 @@
                 \caption{Schéma réseau physique}
             \end{figure}
         \section{Plan d'adressage}
+
+        \section{Configuration IP du Routeur}
+            \begin{verbatim}
+                root@reseaux:/home/etudiant# ip a
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN 
+    group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host 
+       valid_lft forever preferred_lft forever
+
+2: enp0s3: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state DOWN 
+    group default qlen 1000
+    link/ether 08:00:a0:14:11:01 brd ff:ff:ff:ff:ff:ff
+
+3: enp0s8: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel 
+    state UP group default qlen 1000
+    link/ether 08:00:a0:14:11:02 brd ff:ff:ff:ff:ff:ff
+    inet 22.29.35.56/16 scope global enp0s8
+       valid_lft forever preferred_lft forever
+    inet6 fe80::a00:a0ff:fe14:1102/64 scope link 
+       valid_lft forever preferred_lft forever
+
+4: enp0s9: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel 
+    state UP group default qlen 1000
+    link/ether 08:00:a0:14:11:03 brd ff:ff:ff:ff:ff:ff
+    inet6 fe80::a00:a0ff:fe14:1103/64 scope link dadfailed tentative 
+       valid_lft forever preferred_lft forever
+
+5: enp0s10: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel 
+    state UP group default qlen 1000
+    link/ether 08:00:a0:14:11:04 brd ff:ff:ff:ff:ff:ff
+    inet6 fe80::a00:a0ff:fe14:1104/64 scope link dadfailed tentative 
+       valid_lft forever preferred_lft forever
+
+6: enp0s9.50@enp0s9: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc 
+    noqueue state UP group default qlen 1000
+    link/ether 08:00:a0:14:11:03 brd ff:ff:ff:ff:ff:ff
+    inet 192.168.50.254/24 scope global enp0s9.50
+       valid_lft forever preferred_lft forever
+    inet6 fe80::a00:a0ff:fe14:1103/64 scope link dadfailed tentative 
+       valid_lft forever preferred_lft forever
+
+7: enp0s9.60@enp0s9: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc 
+    noqueue state UP group default qlen 1000
+    link/ether 08:00:a0:14:11:03 brd ff:ff:ff:ff:ff:ff
+    inet 192.168.60.254/24 scope global enp0s9.60
+       valid_lft forever preferred_lft forever
+    inet6 fe80::a00:a0ff:fe14:1103/64 scope link dadfailed tentative 
+       valid_lft forever preferred_lft forever
+
+8: enp0s9.10@enp0s9: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc 
+    noqueue state UP group default qlen 1000
+    link/ether 08:00:a0:14:11:03 brd ff:ff:ff:ff:ff:ff
+    inet 192.168.10.254/24 scope global enp0s9.10
+       valid_lft forever preferred_lft forever
+    inet6 fe80::a00:a0ff:fe14:1103/64 scope link 
+       valid_lft forever preferred_lft forever
+
+9: enp0s10.10@enp0s10: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc 
+    noqueue state UP group default qlen 1000
+    link/ether 08:00:a0:14:11:04 brd ff:ff:ff:ff:ff:ff
+    inet 192.168.10.254/24 scope global enp0s10.10
+       valid_lft forever preferred_lft forever
+    inet6 fe80::a00:a0ff:fe14:1104/64 scope link dadfailed tentative 
+       valid_lft forever preferred_lft forever
+
+10: enp0s10.20@enp0s10: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc 
+    noqueue state UP group default qlen 1000
+    link/ether 08:00:a0:14:11:04 brd ff:ff:ff:ff:ff:ff
+    inet 192.168.20.254/24 scope global enp0s10.20
+       valid_lft forever preferred_lft forever
+    inet6 fe80::a00:a0ff:fe14:1104/64 scope link 
+       valid_lft forever preferred_lft forever
+
+11: enp0s10.100@enp0s10: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc 
+    noqueue state UP group default qlen 1000
+    link/ether 08:00:a0:14:11:04 brd ff:ff:ff:ff:ff:ff
+    inet 192.168.100.254/24 scope global enp0s10.100
+       valid_lft forever preferred_lft forever
+    inet6 fe80::a00:a0ff:fe14:1104/64 scope link dadfailed tentative 
+       valid_lft forever preferred_lft forever
+root@reseaux:/home/etudiant# 
+            \end{verbatim}
+            \section{Configuration du relay DHCP sur le routeur}
+            \begin{verbatim}
+GNU nano 6.2                             /etc/default/isc-dhcp-relay                                      
+# Defaults for isc-dhcp-relay initscript
+# sourced by /etc/init.d/isc-dhcp-relay
+# installed at /etc/default/isc-dhcp-relay by the maintainer scripts
+
+#
+# This is a POSIX shell fragment
+#
+
+# What servers should the DHCP relay forward requests to?
+SERVERS="192.168.50.250"
+
+# On what interfaces should the DHCP relay (dhrelay) serve DHCP requests?
+INTERFACES="enp0s9.10 enp0s9.50 enp0s9.60 enp0s10.10 enp0s10.20 enp0s10.100"
+
+# Additional options that are passed to the DHCP relay daemon?
+OPTIONS=""
+            \end{verbatim}
+
+            \section{Configuration des règles d'accès du Firewall}
+            \begin{verbatim}
+                # Politique par défaut restrictive
+iptables -P INPUT DROP
+iptables -P FORWARD DROP
+iptables -P OUTPUT ACCEPT
+
+# 1. Autoriser le trafic loopback
+iptables -A INPUT -i lo -j ACCEPT
+
+# 2. Autoriser les connexions établies et associées pour INPUT et FORWARD
+iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+
+# 3. Bloquer la communication entre les VLANs 10, 20 et 60
+iptables -A FORWARD -s 192.168.10.0/24 -d 192.168.20.0/24 -j DROP
+iptables -A FORWARD -s 192.168.10.0/24 -d 192.168.60.0/24 -j DROP
+iptables -A FORWARD -s 192.168.20.0/24 -d 192.168.10.0/24 -j DROP
+iptables -A FORWARD -s 192.168.20.0/24 -d 192.168.60.0/24 -j DROP
+iptables -A FORWARD -s 192.168.60.0/24 -d 192.168.10.0/24 -j DROP
+iptables -A FORWARD -s 192.168.60.0/24 -d 192.168.20.0/24 -j DROP
+
+# 4. Autoriser la communication de chaque VLAN (10, 20, 60) vers
+     le VLAN Serveur Commun (VLAN 50)
+iptables -A FORWARD -s 192.168.10.0/24 -d 192.168.50.0/24 -j ACCEPT
+iptables -A FORWARD -s 192.168.20.0/24 -d 192.168.50.0/24 -j ACCEPT
+iptables -A FORWARD -s 192.168.60.0/24 -d 192.168.50.0/24 -j ACCEPT
+
+# Autoriser le retour de trafic depuis le VLAN Serveur Commun vers
+     les VLANs internes
+iptables -A FORWARD -s 192.168.50.0/24 -d 192.168.10.0/24 -j ACCEPT
+iptables -A FORWARD -s 192.168.50.0/24 -d 192.168.20.0/24 -j ACCEPT
+iptables -A FORWARD -s 192.168.50.0/24 -d 192.168.60.0/24 -j ACCEPT
+
+# Autoriser seulement HTTP et HTTPS depuis les VLANs vers le serveur web
+     dans la DMZ (192.168.100.250)
+iptables -A FORWARD -p tcp -s 192.168.10.0/24 -d 192.168.100.250 --dport 80 -j ACCEPT
+iptables -A FORWARD -p tcp -s 192.168.10.0/24 -d 192.168.100.250 --dport 443 -j ACCEPT
+
+iptables -A FORWARD -p tcp -s 192.168.20.0/24 -d 192.168.100.250 --dport 80 -j ACCEPT
+iptables -A FORWARD -p tcp -s 192.168.20.0/24 -d 192.168.100.250 --dport 443 -j ACCEPT
+
+iptables -A FORWARD -p tcp -s 192.168.60.0/24 -d 192.168.100.250 --dport 80 -j ACCEPT
+iptables -A FORWARD -p tcp -s 192.168.60.0/24 -d 192.168.100.250 --dport 443 -j ACCEPT
+
+iptables -A FORWARD -p tcp -s 192.168.50.0/24 -d 192.168.100.250 --dport 80 -j ACCEPT
+iptables -A FORWARD -p tcp -s 192.168.50.0/24 -d 192.168.100.250 --dport 443 -j ACCEPT
+
+# 6. Configurer le NAT pour rendre le serveur web accessible 
+    depuis l’extérieur
+
+# Redirection du trafic HTTP
+iptables -t nat -A PREROUTING -p tcp -d 22.29.35.56 --dport 80 -j DNAT --to-destination 192.168.100.250:80
+# Redirection du trafic HTTPS
+iptables -t nat -A PREROUTING -p tcp -d 22.29.35.56 --dport 443 -j DNAT --to-destination 192.168.100.250:443
+
+# 7. Autoriser le trafic HTTP et HTTPS depuis tous les VLANs et depuis 
+    l'extérieur vers le serveur web dans la DMZ
+iptables -A FORWARD -p tcp -d 192.168.100.250 --dport 80 -j ACCEPT
+iptables -A FORWARD -p tcp -d 192.168.100.250 --dport 443 -j ACCEPT
+
+# 8. Autoriser l'accès Internet pour les VLANs en activant le NAT (MASQUERADE)
+iptables -t nat -A POSTROUTING -s 192.168.10.0/24 -o enp0s8 -j MASQUERADE 
+iptables -t nat -A POSTROUTING -s 192.168.20.0/24 -o enp0s8 -j MASQUERADE 
+iptables -t nat -A POSTROUTING -s 192.168.50.0/24 -o enp0s8 -j MASQUERADE 
+iptables -t nat -A POSTROUTING -s 192.168.60.0/24 -o enp0s8 -j MASQUERADE 
+iptables -t nat -A POSTROUTING -s 192.168.100.0/24 -o enp0s8 -j MASQUERADE 
+
+# 9. Autoriser les VLANs à sortir vers Internet via le FORWARD 
+iptables -A FORWARD -s 192.168.10.0/24 -o enp0s8 -j ACCEPT 
+iptables -A FORWARD -s 192.168.20.0/24 -o enp0s8 -j ACCEPT 
+iptables -A FORWARD -s 192.168.50.0/24 -o enp0s8 -j ACCEPT 
+iptables -A FORWARD -s 192.168.60.0/24 -o enp0s8 -j ACCEPT 
+iptables -A FORWARD -s 192.168.100.0/24 -o enp0s8 -j ACCEPT
+            \end{verbatim}
+
+            \section{Aperçu des tables IP du routeur}
+            \begin{verbatim}
+                root@reseaux:/home/etudiant# iptables -L
+Chain INPUT (policy DROP)
+target     prot opt source               destination         
+ACCEPT     all  --  anywhere             anywhere            
+ACCEPT     all  --  anywhere             anywhere             
+    ctstate RELATED,ESTABLISHED
+
+Chain FORWARD (policy DROP)
+target     prot opt source               destination         
+ACCEPT     all  --  anywhere             anywhere             
+    ctstate RELATED,ESTABLISHED
+DROP       all  --  192.168.10.0/24      192.168.20.0/24     
+DROP       all  --  192.168.10.0/24      192.168.60.0/24     
+DROP       all  --  192.168.20.0/24      192.168.10.0/24     
+DROP       all  --  192.168.20.0/24      192.168.60.0/24     
+DROP       all  --  192.168.60.0/24      192.168.10.0/24     
+DROP       all  --  192.168.60.0/24      192.168.20.0/24     
+ACCEPT     all  --  192.168.10.0/24      192.168.50.0/24     
+ACCEPT     all  --  192.168.20.0/24      192.168.50.0/24     
+ACCEPT     all  --  192.168.60.0/24      192.168.50.0/24     
+ACCEPT     all  --  192.168.50.0/24      192.168.10.0/24     
+ACCEPT     all  --  192.168.50.0/24      192.168.20.0/24     
+ACCEPT     all  --  192.168.50.0/24      192.168.60.0/24     
+ACCEPT     tcp  --  192.168.10.0/24      192.168.100.250      tcp dpt:http
+ACCEPT     tcp  --  192.168.10.0/24      192.168.100.250      tcp dpt:https
+ACCEPT     tcp  --  192.168.20.0/24      192.168.100.250      tcp dpt:http
+ACCEPT     tcp  --  192.168.20.0/24      192.168.100.250      tcp dpt:https
+ACCEPT     tcp  --  192.168.60.0/24      192.168.100.250      tcp dpt:http
+ACCEPT     tcp  --  192.168.60.0/24      192.168.100.250      tcp dpt:https
+ACCEPT     tcp  --  192.168.50.0/24      192.168.100.250      tcp dpt:http
+ACCEPT     tcp  --  192.168.50.0/24      192.168.100.250      tcp dpt:https
+ACCEPT     tcp  --  anywhere             192.168.100.250      tcp dpt:http
+ACCEPT     tcp  --  anywhere             192.168.100.250      tcp dpt:https
+ACCEPT     all  --  192.168.10.0/24      anywhere            
+ACCEPT     all  --  192.168.20.0/24      anywhere            
+ACCEPT     all  --  192.168.50.0/24      anywhere            
+ACCEPT     all  --  192.168.60.0/24      anywhere            
+ACCEPT     all  --  192.168.100.0/24     anywhere            
+
+Chain OUTPUT (policy ACCEPT)
+target     prot opt source               destination         
+            \end{verbatim}
         
 
 
